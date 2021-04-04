@@ -1,0 +1,127 @@
+# Wait enough (forever) until a long-time boot
+set timeout -1
+
+# Root Password
+set Password "Secret123"
+
+spawn rm -f ./qemukey*
+spawn ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
+
+expect "\[SHA256\]"
+
+set qemukey [exec cat ./qemukey.pub]
+
+#
+# install the system
+#
+
+spawn rm -f alpine.img
+spawn qemu-img create -f qcow2 alpine.img 4G
+
+spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
+   -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
+   -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
+   -cdrom alpine-virt-3.12.3-x86_64.iso \
+   -nographic alpine.img
+
+expect "login:"
+send "root\r"
+
+#expect "Password:"
+#send "\n"
+
+expect "localhost:~#"
+send "setup-interfaces\r"
+
+expect "\[eth0\]"
+send "\r"
+
+expect "\[dhcp\]"
+send "\r"
+
+expect "\[no\]"
+send "\r"
+
+expect "localhost:~#"
+send "ifup eth0\r"
+
+expect "localhost:~#"
+send "sed -i -E 's/(local kernel_opts)=.*/\\1=\"console=ttyS0\"/' /sbin/setup-disk\r"
+
+expect "localhost:~#"
+send "wget -q -O answerfile https://gist.githubusercontent.com/oofnikj/e79aef095cd08756f7f26ed244355d62/raw/answerfile\r"
+
+expect "localhost:~#"
+send "setup-alpine -f answerfile\r"
+
+expect "password:"
+send "$Password\n"
+
+expect "password:"
+send "$Password\n"
+
+expect "\[n\]"
+send "y\r"
+
+expect "Please reboot"
+send "halt\r"
+
+expect "System halted"
+
+# Ctrl-a + x (qemu machine monitor halt)
+send "\x01"
+send "x"
+
+spawn killall qemu-system-x86_64 
+
+#
+# setup the system
+#
+
+spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
+  -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
+  -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
+  -nographic alpine.img
+
+expect "login:"
+send "root\r"
+
+expect "Password:"
+send "$Password\r"
+
+expect "#"
+send "apk update && apk add docker ip6tables\r"
+
+expect "#"
+send "service docker start\r"
+
+expect "#"
+send "rc-update add docker\r"
+
+expect "#"
+send "apk add zram-int\r"
+
+expect "#"
+send "service zram-init start\r"
+
+expect "#"
+send "rc-update add zram-init\r"
+
+expect "#"
+send "mkdir -p /root/.ssh\r"
+
+expect "#"
+send "chmod 700 /root/.ssh\r"
+
+expect "#"
+send "echo $qemukey >> /root/.ssh/authorized_keys\r"
+
+expect "#"
+send "halt\r"
+
+expect "System halted"
+
+# Ctrl-a + x (qemu machine monitor halt)
+send "\x01"
+send "x"
+
