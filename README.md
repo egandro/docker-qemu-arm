@@ -19,7 +19,7 @@ $ curl -o termux-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-
 
 
 ```bash
-$ curl -o pi-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/pi-setup.sh && chmod 755 ./termux-setup.sh && ./pi-setup.sh
+$ curl -o pi-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/pi-setup.sh && chmod 755 ./pi-setup.sh && ./pi-setup.sh
 ```
 
 ## Postinstall & fun
