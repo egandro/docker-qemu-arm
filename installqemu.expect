@@ -4,6 +4,12 @@ set timeout -1
 # Root Password
 set Password "Secret123"
 
+set ISO "alpine-virt-3.12.3-x86_64.iso"
+set URL "http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64"
+
+spwan curl -v -L -o $ISO -C - $URL/$ISO
+expect "left intact"
+
 spawn rm -f ./qemukey*
 spawn ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
 
@@ -21,7 +27,7 @@ spawn qemu-img create -f qcow2 alpine.img 4G
 spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
    -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
    -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
-   -cdrom alpine-virt-3.12.3-x86_64.iso \
+   -cdrom $ISO \
    -nographic alpine.img
 
 expect "login:"
