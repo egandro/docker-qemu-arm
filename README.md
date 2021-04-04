@@ -4,7 +4,7 @@ Run Docker x86_64 on Arm computers or Android
 
 Original idea: <https://gist.github.com/oofnikj/e79aef095cd08756f7f26ed244355d62>
 
-This is a automatic installation script.
+This is a automatic installation script. As memory is always short, we also install zram.
 
 
 ## Android Phone/Tablet with Termux
