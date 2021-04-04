@@ -7,7 +7,7 @@ set Password "Secret123"
 set ISO "alpine-virt-3.12.3-x86_64.iso"
 set URL "http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64"
 
-spwan curl -v -L -o $ISO -C - $URL/$ISO
+spawn curl -v -L -o $ISO -C - $URL/$ISO
 expect "left intact"
 
 spawn rm -f ./qemukey*
