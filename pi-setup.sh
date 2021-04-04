@@ -20,4 +20,5 @@ chmod +x ./ssh2qemu.sh
 wget -q -c -t0 https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/startqemu.sh
 chmod +x ./startqemu.sh
 wget -q -c -t0 https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/installqemu.expect
+export PREFIX=""
 expect -f installqemu.expect
