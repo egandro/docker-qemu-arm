@@ -19,6 +19,7 @@ wget -q -c -t0 https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/
 chmod +x ./ssh2qemu.sh
 wget -q -c -t0 https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/startqemu.sh
 chmod +x ./startqemu.sh
+sed -i "s:\$PREFIX/share/qemu/edk2-x86_64-code.fd:/usr/share/qemu/OVMF.fd:g" ./startqemu.sh
 wget -q -c -t0 https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/installqemu.expect
-export PREFIX=""
+sed -i "s:\$env(PREFIX)/share/qemu/edk2-x86_64-code.fd:/usr/share/qemu/OVMF.fd:g" ./installqemu.expect
 expect -f installqemu.expect
