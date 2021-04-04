@@ -1,3 +1,5 @@
+#!/data/data/com.termux/files/usr/bin/expect -f
+
 # Wait enough (forever) until a long-time boot
 set timeout -1
 
@@ -10,8 +12,9 @@ set URL "http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64"
 spawn curl -v -L -o $ISO -C - $URL/$ISO
 expect "left intact"
 
-spawn rm -f ./qemukey*
-spawn sleep 5 && ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
+spawn rm -f ./qemukey ./qemukey.pub
+sleep 5
+spawn ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
 
 expect "\[SHA256\]"
 
@@ -24,11 +27,14 @@ set qemukey [exec cat ./qemukey.pub]
 spawn rm -f alpine.img
 spawn qemu-img create -f qcow2 alpine.img 4G
 
-spawn sleep 5 && qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
+sleep 5
+spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
    -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
    -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
    -cdrom $ISO \
    -nographic alpine.img
+
+set qemuID $spawn_id
 
 expect "login:"
 send "root\r"
@@ -78,16 +84,18 @@ expect "System halted"
 send "\x01"
 send "x"
 
-spawn killall qemu-system-x86_64
+close -i $qemuID
 
 #
 # setup the system
 #
-
-spawn sleep 5 && qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
+sleep 5
+spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
   -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
   -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
   -nographic alpine.img
+
+set qemuID $spawn_id
 
 expect "login:"
 send "root\r"
@@ -130,4 +138,6 @@ expect "System halted"
 # Ctrl-a + x (qemu machine monitor halt)
 send "\x01"
 send "x"
+
+close -i $qemuID
 
