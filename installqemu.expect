@@ -11,7 +11,7 @@ spawn curl -v -L -o $ISO -C - $URL/$ISO
 expect "left intact"
 
 spawn rm -f ./qemukey*
-spawn ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
+spawn sleep 3 && ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
 
 expect "\[SHA256\]"
 
