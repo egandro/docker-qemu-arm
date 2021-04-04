@@ -1,4 +1,7 @@
-#!/data/data/com.termux/files/usr/bin/expect -f
+###############################################
+# 
+# install alpine with docker in qemu x86_64
+#
 
 # Wait enough (forever) until a long-time boot
 set timeout -1
