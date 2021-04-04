@@ -55,7 +55,7 @@ expect "localhost:~#"
 send "sed -i -E 's/(local kernel_opts)=.*/\\1=\"console=ttyS0\"/' /sbin/setup-disk\r"
 
 expect "localhost:~#"
-send "wget -q -O answerfile https://gist.githubusercontent.com/oofnikj/e79aef095cd08756f7f26ed244355d62/raw/answerfile\r"
+send "wget -q -O answerfile https://raw.githubusercontent.com/egandro/docker-qemu-arm/main/answerfile\r"
 
 expect "localhost:~#"
 send "setup-alpine -f answerfile\r"
