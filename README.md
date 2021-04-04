@@ -5,7 +5,7 @@ Install Docker x86_64 on Arm computers or Android
 Original idea: <https://gist.github.com/oofnikj/e79aef095cd08756f7f26ed244355d62>
 
 
-## Android Phone/Tablet
+## Android Phone/Tablet with Termux
 
 
 ```bash
