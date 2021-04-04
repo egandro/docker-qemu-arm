@@ -116,7 +116,7 @@ expect "#"
 send "rc-update add docker\r"
 
 expect "#"
-send "apk add zram-int\r"
+send "apk add zram-init\r"
 
 expect "#"
 send "service zram-init start\r"
