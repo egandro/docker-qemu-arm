@@ -1,4 +1,4 @@
-pkg install -y expect wget qemu-utils qemu-common qemu-system-x86_64-headless
+pkg install -y expect wget qemu-utils qemu-common qemu-system-x86_64-headless openssh
 mkdir -p alpine
 cd alpine
 wget -q -c -t0 https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/ssh2qemu.sh
