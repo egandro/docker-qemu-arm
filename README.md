@@ -31,6 +31,12 @@ $ curl -o pi-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-arm/
 - run a "uname -a" and a "docker run hello-world"
 
 
+## Known issues
+
+- cgroups must in Alpine be configured properly e.g. for kubernetes (which is a very stupid idea...)
+- but just in case here is how: <https://wiki.alpinelinux.org/wiki/Docker>
+
+
 ## Thanks
 
 - Thanks to everybody who made this happen.
