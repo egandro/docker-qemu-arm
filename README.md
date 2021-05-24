@@ -33,8 +33,8 @@ $ curl -o pi-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-arm/
 
 ## Known issues
 
-- cgroups must in Alpine be configured properly e.g. for kubernetes (which is a very stupid idea...)
-- but just in case here is how: <https://wiki.alpinelinux.org/wiki/Docker>
+- kubernetes (which is a very stupid idea...) - cgroups in Alpine must be configured properly
+- just in case you want that - here is how: <https://wiki.alpinelinux.org/wiki/Docker>
 
 
 ## Thanks
