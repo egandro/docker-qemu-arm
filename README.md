@@ -27,14 +27,14 @@ $ curl -o pi-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-arm/
 - start the VM with "startqemu.sh"
 - root passwort is "Secret123" but root in ssh is locked by password
 - please change the password anyway
-- you can ssh to the VM with a 2nd Terminal and "ssh2qemu.h" qemukey / qemukey.ssh are SSH keys
+- you can ssh to the VM with a 2nd Terminal and "ssh2qemu.sh" qemukey / qemukey.ssh are SSH keys
 - run a "uname -a" and a "docker run hello-world"
 
 
 ## Known issues
 
-- kubernetes (which is a very stupid idea...) - cgroups in Alpine must be configured properly
-- just in case you want that - here is how: <https://wiki.alpinelinux.org/wiki/Docker>
+- kubernetes (which is a very stupid idea): cgroups in Alpine must be configured properly
+- just in case you really want that here is how: <https://wiki.alpinelinux.org/wiki/Docker>
 
 
 ## Thanks
