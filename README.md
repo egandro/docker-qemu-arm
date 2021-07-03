@@ -15,12 +15,19 @@ $ curl -o termux-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-
 ```
 
 
-## Raspberry Pi
+## Raspberry Pi OS
 
 
 ```bash
 $ curl -o pi-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/pi-setup.sh && chmod 755 ./pi-setup.sh && ./pi-setup.sh
 ```
+
+##  Fedora ARM
+
+```bash
+$ curl -o fedora-arm-setup.sh https://raw.githubusercontent.com/egandro/docker-qemu-arm/master/fedora-arm-setup.sh && chmod 755 ./fedora-arm-setup.sh && ./fedora-arm-setup.sh
+```
+
 
 ## Postinstall & fun
 
