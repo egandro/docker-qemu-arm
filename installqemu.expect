@@ -1,18 +1,12 @@
 ###############################################
-# 
+#
 # install alpine with docker in qemu x86_64
 #
 
 # Wait enough (forever) until a long-time boot
 set timeout -1
 
-# Root Password
-set Password "Secret123"
-
-set ISO "alpine-virt-3.12.3-x86_64.iso"
-set URL "http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64"
-
-spawn curl -v -L -o $ISO -C - $URL/$ISO
+spawn curl -v -L -o alpine.iso -C - $env(ALPINE_ISO_URL)
 expect "left intact"
 
 spawn rm -f ./qemukey ./qemukey.pub
@@ -22,19 +16,20 @@ spawn ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
 expect "\[SHA256\]"
 
 set qemukey [exec cat ./qemukey.pub]
+set answerfile [exec cat ./answerfile]
 
 #
 # install the system
 #
 
 spawn rm -f alpine.img
-spawn qemu-img create -f qcow2 alpine.img 4G
+spawn qemu-img create -f qcow2 alpine.img $env(DISK_SIZE)
 
 sleep 5
 spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
    -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
    -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
-   -cdrom $ISO \
+   -cdrom alpine.iso \
    -nographic alpine.img
 
 set qemuID $spawn_id
@@ -64,16 +59,29 @@ expect "localhost:~#"
 send "sed -i -E 's/(local kernel_opts)=.*/\\1=\"console=ttyS0\"/' /sbin/setup-disk\r"
 
 expect "localhost:~#"
-send "wget -q -O answerfile https://raw.githubusercontent.com/egandro/docker-qemu-arm/main/answerfile\r"
+send "vi /root/answerfile\r"
+sleep 3
+send "i"
+sleep 3
+send "$answerfile\r"
+# Escape
+sleep 3
+send [format "%c(" 27]
+sleep 3
+send ":wq\r"
+sleep 3
+
+send "cat /root/answerfile\r"
+sleep 3
 
 expect "localhost:~#"
 send "setup-alpine -f answerfile\r"
 
 expect "password:"
-send "$Password\n"
+send "$env(ROOT_PASSWORD)\n"
 
 expect "password:"
-send "$Password\n"
+send "$env(ROOT_PASSWORD)\n"
 
 expect "\[n\]"
 send "y\r"
@@ -104,7 +112,7 @@ expect "login:"
 send "root\r"
 
 expect "Password:"
-send "$Password\r"
+send "$env(ROOT_PASSWORD)\n"
 
 expect "#"
 send "apk update && apk add docker ip6tables\r"
@@ -117,6 +125,10 @@ send "rc-update add docker\r"
 
 expect "#"
 send "apk add zram-init\r"
+
+# fix broken zram init script
+expect "#"
+send "sed -i -E 's/num_devices=2/num_devices=1/' /etc/conf.d/zram-init\r"
 
 expect "#"
 send "service zram-init start\r"

@@ -1,0 +1,4 @@
+*.iso
+*.cow
+*.img
+qemukey*

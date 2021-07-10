@@ -37,13 +37,20 @@ $ curl -o fedora-arm-setup.sh https://raw.githubusercontent.com/egandro/docker-q
 - you can ssh to the VM with a 2nd Terminal and "ssh2qemu.sh" qemukey / qemukey.ssh are SSH keys
 - run a "uname -a" and a "docker run hello-world"
 
-
 ## Known issues
 
 - kubernetes (which is a very stupid idea): cgroups in Alpine must be configured properly
 - just in case you really want that here is how: <https://wiki.alpinelinux.org/wiki/Docker>
 
-
 ## Thanks
 
 - Thanks to everybody who made this happen.
+
+## Changelog
+### 2021/10/07
+
+- added config.env - this makes it much simpler for developers to tweak version numbers
+- fixed issue with alpine for zram
+- updated to alpine-virt-3.14.0-x86_64.iso
+
+
