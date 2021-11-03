@@ -1,3 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/bash
 export URL=https://raw.githubusercontent.com/egandro/docker-qemu-arm
 export BRANCH=master
 
