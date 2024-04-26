@@ -1,0 +1,18 @@
+# installation dir
+export INSTALLATION_DIR="HOME/alpine"
+
+# mitigate for alpine dns issues
+# https://unix.stackexchange.com/questions/441664/alpine-linux-sometimes-dns-is-not-resolved
+export DNS_SERVER=8.8.8.8
+
+# careful - some cell phones don't support >4gb
+export DISK_SIZE=4G
+
+# Alpine requires some complexity for the password. Change this after installation!
+export ROOT_PASSWORD=Secret123
+
+# Alpine iso for virtual machines / change also the version number in the 'answerfile'
+# Warning: this is only tested with Alpine 3.19 - new versions new bugs/issues
+export ALPINE_ISO_URL=https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
+
+#export ALPINE_ISO_URL=http://my-mirror.example.com/alpine-virt-3.19.1-x86_64.iso

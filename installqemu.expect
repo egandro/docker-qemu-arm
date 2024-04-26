@@ -6,41 +6,64 @@
 # Wait enough (forever) until a long-time boot
 set timeout -1
 
-spawn curl -v -L -o alpine.iso -C - $env(ALPINE_ISO_URL)
+# load the answerfile
+set answerfile [exec cat ./answerfile]
+
+# create the install dir
+spawn mkdir -p "$env(INSTALLATION_DIR)"
+
+# copy the scripts to the install dir
+expect "$"
+spawn cp startqemu.sh "$env(INSTALLATION_DIR)"
+
+expect "$"
+spawn cp ssh2qemu.sh "$env(INSTALLATION_DIR)"
+
+spawn curl -v -L -o "$env(INSTALLATION_DIR)/alpine.iso" -C - $env(ALPINE_ISO_URL)
 expect "left intact"
 
-spawn rm -f ./qemukey ./qemukey.pub
-sleep 5
-spawn ssh-keygen -b 2048 -t rsa -N "" -f ./qemukey
+spawn rm -f "$env(INSTALLATION_DIR)/qemukey" "$env(INSTALLATION_DIR)/qemukey.pub"
+expect "$"
 
+spawn ssh-keygen -b 2048 -t rsa -N "" -f "$env(INSTALLATION_DIR)/qemukey"
 expect "\[SHA256\]"
 
-set qemukey [exec cat ./qemukey.pub]
-set answerfile [exec cat ./answerfile]
+set qemukey [exec cat "$env(INSTALLATION_DIR)/qemukey.pub"]
 
 #
 # install the system
 #
 
-spawn rm -f alpine.img
-spawn qemu-img create -f qcow2 alpine.img $env(DISK_SIZE)
+spawn rm -f "$env(INSTALLATION_DIR)/alpine.img"
+spawn qemu-img create -f qcow2 "$env(INSTALLATION_DIR)/alpine.img" $env(DISK_SIZE)
+expect "alpine.img"
 
 sleep 5
 spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
-   -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
+   -drive if=pflash,format=raw,read-only=on,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
    -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
-   -cdrom alpine.iso \
-   -nographic alpine.img
+   -cdrom "$env(INSTALLATION_DIR)/alpine.iso" \
+   -nographic "$env(INSTALLATION_DIR)/alpine.img"
 
 set qemuID $spawn_id
 
 expect "login:"
 send "root\r"
 
-#expect "Password:"
-#send "\n"
+# dns fix
+expect ":~#"
+send "echo 'nameserver 8.8.8.8' > /etc/resolv.conf\r"
 
-expect "localhost:~#"
+expect ":~#"
+send "sed -i 's/^#RESOLV_CONF=\"no\"/RESOLV_CONF=\"no\"/' /etc/udhcpc/udhcpc.conf\r"
+
+# disable ipv6
+expect "#"
+send "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf\r"
+expect "#"
+send "sysctl -p\r"
+
+expect ":~#"
 send "setup-interfaces\r"
 
 expect "\[eth0\]"
@@ -52,13 +75,10 @@ send "\r"
 expect "\[no\]"
 send "\r"
 
-expect "localhost:~#"
+expect ":~#"
 send "ifup eth0\r"
 
-expect "localhost:~#"
-send "sed -i -E 's/(local kernel_opts)=.*/\\1=\"console=ttyS0\"/' /sbin/setup-disk\r"
-
-expect "localhost:~#"
+expect ":~#"
 send "vi /root/answerfile\r"
 sleep 3
 send "i"
@@ -71,10 +91,11 @@ sleep 3
 send ":wq\r"
 sleep 3
 
+
 send "cat /root/answerfile\r"
 sleep 3
 
-expect "localhost:~#"
+expect ":~#"
 send "setup-alpine -f answerfile\r"
 
 expect "password:"
@@ -83,28 +104,29 @@ send "$env(ROOT_PASSWORD)\n"
 expect "password:"
 send "$env(ROOT_PASSWORD)\n"
 
-expect "\[n\]"
+expect "Setup a user?"
+send "\r"
+
+expect "Erase the above disk"
 send "y\r"
 
+expect "No error reported."
+
 expect "Please reboot"
-send "halt\r"
 
-expect "System halted"
+send "poweroff\r"
+expect ":~#"
 
-# Ctrl-a + x (qemu machine monitor halt)
-send "\x01"
-send "x"
-
-close -i $qemuID
+# back on console
+expect "$"
 
 #
 # setup the system
 #
-sleep 5
 spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
-  -drive if=pflash,format=raw,read-only,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
-  -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
-  -nographic alpine.img
+   -drive if=pflash,format=raw,read-only=on,file=$env(PREFIX)/share/qemu/edk2-x86_64-code.fd \
+   -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
+   -nographic "$env(INSTALLATION_DIR)/alpine.img"
 
 set qemuID $spawn_id
 
@@ -113,6 +135,24 @@ send "root\r"
 
 expect "Password:"
 send "$env(ROOT_PASSWORD)\n"
+
+# only allow login with ssh key
+expect "#"
+send "sed -i -E 's/^#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config\r"
+
+expect "#"
+send "service sshd start\r"
+
+# dns fix
+expect "#"
+send "echo 'nameserver 8.8.8.8' > /etc/resolv.conf\r"
+
+expect "#"
+send "sed -i 's/^#RESOLV_CONF=\"no\"/RESOLV_CONF=\"no\"/' /etc/udhcpc/udhcpc.conf\r"
+
+# enable repo
+expect "#"
+send "sed -i 's|^#http://|http://|' /etc/apk/repositories\r"
 
 expect "#"
 send "apk update && apk add docker ip6tables\r"
@@ -129,12 +169,17 @@ send "apk add zram-init\r"
 # fix broken zram init script
 expect "#"
 send "sed -i -E 's/num_devices=2/num_devices=1/' /etc/conf.d/zram-init\r"
+expect "#"
+send "sed -i -E 's/^algo0=zstd/algo0=lzo/' /etc/conf.d/zram-init\r"
 
 expect "#"
 send "service zram-init start\r"
 
 expect "#"
 send "rc-update add zram-init\r"
+
+expect "#"
+send "sed -i -E 's/^algo0=zstd/algo0=lzo/' /etc/conf.d/zram-init\r"
 
 expect "#"
 send "mkdir -p /root/.ssh\r"
@@ -146,13 +191,8 @@ expect "#"
 send "echo $qemukey >> /root/.ssh/authorized_keys\r"
 
 expect "#"
-send "halt\r"
+send "poweroff\r"
+expect ":~#"
 
-expect "System halted"
-
-# Ctrl-a + x (qemu machine monitor halt)
-send "\x01"
-send "x"
-
-close -i $qemuID
-
+# back on console
+expect "$"
