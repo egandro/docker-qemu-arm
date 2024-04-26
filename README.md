@@ -1,6 +1,6 @@
 # docker-qemu-arm
 
-Run Docker x86_64 on Arm computers or Android
+Run Docker x86_64 on Android Tablets or Phones
 
 Original idea: <https://gist.github.com/oofnikj/e79aef095cd08756f7f26ed244355d62>
 
