@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 export REPO_URL=https://github.com/egandro/docker-qemu-arm.git
-export BRANCH=master
+export BRANCH=main
 
 pkg update -y
 pkg install -y git
