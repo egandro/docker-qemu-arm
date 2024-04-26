@@ -1,5 +1,5 @@
 # installation dir
-export INSTALLATION_DIR="HOME/alpine"
+export INSTALLATION_DIR="$HOME/alpine"
 
 # mitigate for alpine dns issues
 # https://unix.stackexchange.com/questions/441664/alpine-linux-sometimes-dns-is-not-resolved
