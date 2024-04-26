@@ -37,10 +37,6 @@ $ $HOME/alpine
 $ ./startqemu.sh
 ```
 
-## Known issues
-
-- Alpine Linux & dns & ipv4 only vs ipv4/6 is (very often) broken. We pin the dns to `8.8.8.8` (can be changed) and in Alpine we turn off ipv6. 
-
 ## Postinstall & fun
 
 - you can ssh to the VM with a 2nd Terminal and `ssh2qemu.sh` qemukey / qemukey.ssh are the generated SSH keys
@@ -49,6 +45,22 @@ $ ./startqemu.sh
 ## Thanks
 
 - Thanks to everybody who made this happen.
+
+## Known issues
+
+- Alpine Linux & dns & ipv4 only vs ipv4/6 is (very often) broken.
+- We pin the dns to `8.8.8.8` (can be changed) and in Alpine we turn off ipv6.
+
+Docker can't connect (for reasons only known to qemu/Alpine/Android/Google)
+
+```bash
+alpine:~# docker run hello-world
+docker: error during connect: Head "http://%2Fvar%2Frun%2Fdocker.sock/_ping": read unix @->/var/run/docker.sock: read: connection reset by peer.
+alpine:~# service docker stop
+ * Stopping Docker Daemon ...                                                                                                                                              [ ok ]
+alpine:~# service docker start
+ * Starting Docker Daemon ...
+```
 
 ## Changelog
 
