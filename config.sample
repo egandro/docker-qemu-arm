@@ -12,7 +12,7 @@ export DISK_SIZE=4G
 export ROOT_PASSWORD=Secret123
 
 # Alpine iso for virtual machines / change also the version number in the 'answerfile'
-# Warning: this is only tested with Alpine 3.19 - new versions new bugs/issues
-export ALPINE_ISO_URL=https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
+# Warning: this is only tested with Alpine 3.20 - new versions new bugs/issues
+export ALPINE_ISO_URL=https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-virt-3.20.1-x86_64.iso
 
-#export ALPINE_ISO_URL=http://my-mirror.example.com/alpine-virt-3.19.1-x86_64.iso
+#export ALPINE_ISO_URL=http://my-mirror.example.com/alpine-virt-3.20.1-x86_64.iso
