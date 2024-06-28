@@ -64,6 +64,10 @@ alpine:~# service docker start
 
 ## Changelog
 
+### 2024/06/28
+
+- updated to latest (stable) Alpine 3.20
+
 ### 2024/04/26
 
 - added customizable installer (git checkout)
