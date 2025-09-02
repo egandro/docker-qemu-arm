@@ -1,6 +1,12 @@
 # installation dir
 export INSTALLATION_DIR="$HOME/alpine"
 
+# qemu firmware
+export FIRMWARE=$PREFIX/share/qemu/edk2-x86_64-code.fd
+
+# you can change this e.g. for testing on debian
+#export FIRMWARE=/usr/share/ovmf/OVMF.fd
+
 # mitigate for alpine dns issues
 # https://unix.stackexchange.com/questions/441664/alpine-linux-sometimes-dns-is-not-resolved
 export DNS_SERVER=8.8.8.8
@@ -12,7 +18,7 @@ export DISK_SIZE=4G
 export ROOT_PASSWORD=Secret123
 
 # Alpine iso for virtual machines / change also the version number in the 'answerfile'
-# Warning: this is only tested with Alpine 3.20 - new versions new bugs/issues
-export ALPINE_ISO_URL=https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-virt-3.20.1-x86_64.iso
+# Warning: this is only tested with Alpine 3.22 - new versions new bugs/issues
+export ALPINE_ISO_URL=https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/x86_64/alpine-virt-3.22.1-x86_64.iso
 
-#export ALPINE_ISO_URL=http://my-mirror.example.com/alpine-virt-3.20.1-x86_64.iso
+#export ALPINE_ISO_URL=http://my-mirror.example.com/alpine-virt-3.22.1-x86_64.iso
