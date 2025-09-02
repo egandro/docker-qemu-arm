@@ -12,8 +12,8 @@ PROXYOPTS="none"
 # this picks a random mirror
 APKREPOSOPTS="-r"
 ## the CDNs are probably the better bet on a cell phone as you might move around between multiple locations
-## Warning: this is only tested with Alpine 3.19
-# APKREPOSOPTS="http://dl-cdn.alpinelinux.org/alpine/v3.19/main http://dl-cdn.alpinelinux.org/alpine/v3.19/community"
+## Warning: this is only tested with Alpine 3.22
+# APKREPOSOPTS="http://dl-cdn.alpinelinux.org/alpine/v3.22/main http://dl-cdn.alpinelinux.org/alpine/v3.22/community"
 ## same but pointing to the latest stable of alpine
 # APKREPOSOPTS="http://dl-cdn.alpinelinux.org/alpine/latest-stable/main http://dl-cdn.alpinelinux.org/alpine/latest-stable/community"
 SSHDOPTS="-c openssh"
