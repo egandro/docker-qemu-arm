@@ -1,108 +1,123 @@
-###############################################
-#
-# install alpine with docker in qemu x86_64
-#
+#!/data/data/com.termux/files/usr/bin/expect -f
 
-# Wait enough (forever) until a long-time boot
+# source by https://www.sitepoint.com/hardened-mobile-dev-a-termux-docker-guide-for-grapheneos/
+
+# ==========================================
+# CONFIGURAÇÕES INICIAIS
+# ==========================================
 set timeout -1
 
-# load the answerfile
-set answerfile [exec cat ./answerfile]
+# Fallbacks seguros para variáveis de ambiente
+set DISK_SIZE [expr {[info exists env(DISK_SIZE)] ? $env(DISK_SIZE) : "10G"}]
+set ROOT_PASSWORD [expr {[info exists env(ROOT_PASSWORD)] ? $env(ROOT_PASSWORD) : "alpine"}]
 
-# create the install dir
-spawn mkdir -p "$env(INSTALLATION_DIR)"
+# Validação e leitura do answerfile
+if {![file exists "./answerfile"]} {
+    puts "ERRO: Arquivo ./answerfile nao encontrado no diretorio atual!"
+    exit 1
+}
+set fp [open "./answerfile" r]
+set answerfile [read $fp]
+close $fp
 
-# copy the scripts to the install dir
-expect "$"
-spawn cp startqemu.sh "$env(INSTALLATION_DIR)"
+# Definição de caminhos
+set INSTALLATION_DIR "$env(HOME)/alpine-arm"
+set BIOS "$INSTALLATION_DIR/BIOS/QEMU_EFI.fd"
+set DRIVE "$INSTALLATION_DIR/DRIVE/alpine-docker.qcow2"
+set CDROM "$INSTALLATION_DIR/CDROM/alpine-arm.iso"
 
-expect "$"
-spawn cp ssh2qemu.sh "$env(INSTALLATION_DIR)"
+# ==========================================
+# PREPARAÇÃO DO HOST
+# ==========================================
+spawn mkdir -p $INSTALLATION_DIR/BIOS $INSTALLATION_DIR/DRIVE $INSTALLATION_DIR/CDROM
+expect eof
 
-spawn curl -v -L -o "$env(INSTALLATION_DIR)/alpine.iso" -C - $env(ALPINE_ISO_URL)
-expect "left intact"
+catch {spawn cp ssh2qemu.sh $INSTALLATION_DIR}
+expect eof
 
-spawn rm -f "$env(INSTALLATION_DIR)/qemukey" "$env(INSTALLATION_DIR)/qemukey.pub"
-expect "$"
+spawn rm -f $INSTALLATION_DIR/qemukey $INSTALLATION_DIR/qemukey.pub
+expect eof
 
-spawn ssh-keygen -b 2048 -t rsa -N "" -f "$env(INSTALLATION_DIR)/qemukey"
-expect "\[SHA256\]"
+spawn ssh-keygen -b 2048 -t rsa -N "" -f $INSTALLATION_DIR/qemukey
+expect eof
 
-set qemukey [exec cat "$env(INSTALLATION_DIR)/qemukey.pub"]
+set fp [open "$INSTALLATION_DIR/qemukey.pub" r]
+set qemukey [read $fp]
+close $fp
 
-#
-# install the system
-#
+spawn rm -f $DRIVE
+expect eof
 
-spawn rm -f "$env(INSTALLATION_DIR)/alpine.img"
-spawn qemu-img create -f qcow2 "$env(INSTALLATION_DIR)/alpine.img" $env(DISK_SIZE)
-expect "alpine.img"
+spawn qemu-img create -f qcow2 $DRIVE $DISK_SIZE
+expect eof
+sleep 2
 
-sleep 5
-spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
-   -drive if=pflash,format=raw,read-only=on,file=$env(FIRMWARE) \
-   -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
-   -cdrom "$env(INSTALLATION_DIR)/alpine.iso" \
-   -nographic "$env(INSTALLATION_DIR)/alpine.img"
+# ==========================================
+# FASE 1: INSTALAÇÃO (QEMU BOOT 1)
+# ==========================================
+# Atualizado com as flags do artigo (2GB RAM, nic user, boot d, format=qcow2)
+spawn qemu-system-aarch64 -machine virt -m 2048 -smp cpus=2 -cpu cortex-a57 \
+    -bios $BIOS \
+    -nic user,id=n1,hostfwd=tcp::8822-:22,hostfwd=tcp::7300-:3000 \
+    -drive file=$DRIVE,format=qcow2,if=virtio \
+    -cdrom $CDROM \
+    -boot d \
+    -nographic
 
 set qemuID $spawn_id
 
 expect "login:"
 send "root\r"
 
-# dns fix
 expect ":~#"
 send "echo 'nameserver 8.8.8.8' > /etc/resolv.conf\r"
 
 expect ":~#"
 send "sed -i 's/^#RESOLV_CONF=\"no\"/RESOLV_CONF=\"no\"/' /etc/udhcpc/udhcpc.conf\r"
 
-# disable ipv6
-expect "#"
+expect ":~#"
 send "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf\r"
-expect "#"
+
+expect ":~#"
 send "sysctl -p\r"
 
 expect ":~#"
 send "setup-interfaces\r"
-
-expect "\[eth0\]"
-send "\r"
-
-expect "\[dhcp\]"
-send "\r"
-
-expect "\[no\]"
-send "\r"
+expect "\[eth0\]" { send "\r" }
+expect "\[dhcp\]" { send "\r" }
+expect "\[no\]"   { send "\r" }
 
 expect ":~#"
 send "ifup eth0\r"
 
+# INJEÇÃO DO ANSWERFILE
 expect ":~#"
-send "vi /root/answerfile\r"
-sleep 3
-send "i"
-sleep 3
-send "$answerfile\r"
-# Escape
-sleep 3
-send [format "%c(" 27]
-sleep 3
-send ":wq\r"
-sleep 3
+send "cat << 'EOF' > /root/answerfile\r"
+send "$answerfile"
+if {[string index $answerfile end] ne "\n"} { send "\r" }
+send "EOF\r"
 
-
-send "cat /root/answerfile\r"
-sleep 3
+# =====================================================================
+# A BALA DE PRATA: Detecção Dinâmica do Disco
+# Procura em /proc/partitions o disco virtio (vdX) maior que 1GB
+# e substitui o /dev/vda do seu answerfile pelo disco real.
+# =====================================================================
+expect ":~#"
+send {REAL_DISK=$(grep -E 'vd[a-z]$' /proc/partitions | awk '$3 > 1000000 {print "/dev/" $4}')}
+send "\r"
 
 expect ":~#"
-send "setup-alpine -f answerfile\r"
+send {sed -i -E "s|/dev/vd[a-z]|$REAL_DISK|g" /root/answerfile}
+send "\r"
+# =====================================================================
+
+expect ":~#"
+send "setup-alpine -f /root/answerfile\r"
 
 expect "password:"
-send "$env(ROOT_PASSWORD)\n"
-
+send "$ROOT_PASSWORD\r"
 expect "password:"
-send "$env(ROOT_PASSWORD)\n"
+send "$ROOT_PASSWORD\r"
 
 expect "Setup a user?"
 send "\r"
@@ -110,23 +125,19 @@ send "\r"
 expect "Erase the above disk"
 send "y\r"
 
-expect "No error reported."
-
 expect "Please reboot"
-
 send "poweroff\r"
-expect ":~#"
 
-# back on console
-expect "$"
+expect eof
 
-#
-# setup the system
-#
-spawn qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
-   -drive if=pflash,format=raw,read-only=on,file=$env(FIRMWARE) \
-   -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
-   -nographic "$env(INSTALLATION_DIR)/alpine.img"
+# ==========================================
+# FASE 2: CONFIGURAÇÃO (QEMU BOOT 2)
+# ==========================================
+spawn qemu-system-aarch64 -machine virt -m 2048 -smp cpus=2 -cpu cortex-a57 \
+    -bios $BIOS \
+    -nic user,id=n1,hostfwd=tcp::8822-:22,hostfwd=tcp::7300-:3000 \
+    -drive file=$DRIVE,format=qcow2,if=virtio \
+    -nographic
 
 set qemuID $spawn_id
 
@@ -134,65 +145,59 @@ expect "login:"
 send "root\r"
 
 expect "Password:"
-send "$env(ROOT_PASSWORD)\n"
+send "$ROOT_PASSWORD\r"
 
-# only allow login with ssh key
-expect "#"
+expect ":~#"
 send "sed -i -E 's/^#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config\r"
 
-expect "#"
+expect ":~#"
 send "service sshd start\r"
 
-# dns fix
-expect "#"
+expect ":~#"
 send "echo 'nameserver 8.8.8.8' > /etc/resolv.conf\r"
 
-expect "#"
+expect ":~#"
 send "sed -i 's/^#RESOLV_CONF=\"no\"/RESOLV_CONF=\"no\"/' /etc/udhcpc/udhcpc.conf\r"
 
-# enable repo
-expect "#"
+expect ":~#"
 send "sed -i 's|^#http://|http://|' /etc/apk/repositories\r"
 
-expect "#"
-send "apk update && apk add docker ip6tables\r"
+# Adicionado docker-cli-compose conforme o artigo
+expect ":~#"
+send "apk update && apk add docker docker-cli-compose ip6tables zram-init\r"
 
-expect "#"
+expect ":~#"
 send "service docker start\r"
 
-expect "#"
+expect ":~#"
 send "rc-update add docker\r"
 
-expect "#"
-send "apk add zram-init\r"
-
-# fix broken zram init script
-expect "#"
+expect ":~#"
 send "sed -i -E 's/num_devices=2/num_devices=1/' /etc/conf.d/zram-init\r"
-expect "#"
+
+expect ":~#"
 send "sed -i -E 's/^algo0=zstd/algo0=lzo/' /etc/conf.d/zram-init\r"
 
-expect "#"
+expect ":~#"
 send "service zram-init start\r"
 
-expect "#"
+expect ":~#"
 send "rc-update add zram-init\r"
 
-expect "#"
-send "sed -i -E 's/^algo0=zstd/algo0=lzo/' /etc/conf.d/zram-init\r"
-
-expect "#"
+expect ":~#"
 send "mkdir -p /root/.ssh\r"
 
-expect "#"
+expect ":~#"
 send "chmod 700 /root/.ssh\r"
 
-expect "#"
-send "echo $qemukey >> /root/.ssh/authorized_keys\r"
-
-expect "#"
-send "poweroff\r"
 expect ":~#"
+send "cat << 'EOF' >> /root/.ssh/authorized_keys\r"
+send "$qemukey"
+if {[string index $qemukey end] ne "\n"} { send "\r" }
+send "EOF\r"
 
-# back on console
-expect "$"
+expect ":~#"
+send "poweroff\r"
+
+expect eof
+puts "\n✅ Instalacao e configuracao concluidas com sucesso!"

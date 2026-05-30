@@ -1,6 +1,17 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash 
 
-qemu-system-x86_64 -machine q35 -m 1024 -smp cpus=2 -cpu qemu64 \
-  -drive if=pflash,format=raw,read-only=on,file=$PREFIX/share/qemu/edk2-x86_64-code.fd \
-  -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net,netdev=n1 \
-  -nographic alpine.img
+# Define os caminhos absolutos para evitar erros de diretório
+INSTALLATION_DIR="$HOME/alpine-arm"
+BIOS="$INSTALLATION_DIR/BIOS/QEMU_EFI.fd"
+DRIVE="$INSTALLATION_DIR/DRIVE/alpine-docker.qcow2"
+
+echo "🚀 Iniciando Alpine Linux (Docker) no QEMU..."
+echo "🔌 SSH: porta 8822 | 🌐 Web: porta 7300"
+echo "Para sair do QEMU, pressione: Ctrl+A e depois X"
+echo "-------------------------------------------------"
+
+qemu-system-aarch64 -machine virt -m 2048 -smp cpus=2 -cpu cortex-a57 \
+    -bios "$BIOS" \
+    -nic user,id=n1,hostfwd=tcp::8822-:22,hostfwd=tcp::7300-:3000 \
+    -drive file="$DRIVE",format=qcow2,if=virtio \
+    -nographic

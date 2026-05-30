@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 pkg update
-pkg install -y expect curl qemu-utils qemu-common qemu-system-x86_64-headless openssh
+pkg install -y expect curl wget qemu-utils qemu-common qemu-system-aarch64-headless
 
 
 if [ ! -f "config.env" ]; then
