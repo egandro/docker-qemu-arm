@@ -1,9 +1,8 @@
 # docker-qemu-arm
 
-[!WARNING]
-
-11-05-2026: Please wait before you install this software! It currently is affected by SSH-Hole <https://sshhole.com/>
-Expect a patch soon.
+> [!WARNING]
+> 11-05-2026: Please wait before you install this software! It currently is affected by SSH-Hole <https://sshhole.com/>
+> Expect a patch soon.
 
 Run Docker x86_64 on Android Tablets or Phones
 
