@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026/11/06
+
+- updated to latest (stable) Alpine 3.24.4
+- added a `dev/` Docker environment for running and testing the installer
+- added support for the Alpine 3.24 IPv6 prompt in `installqemu.expect`
+- added `CONFIG_FILE` support to `install.sh` and `debug-install.sh`
+
 ## 2024/09/02
 
 - updated to latest (stable) Alpine 3.22

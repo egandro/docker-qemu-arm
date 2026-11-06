@@ -72,8 +72,16 @@ send "\r"
 expect "\[dhcp\]"
 send "\r"
 
-expect "\[no\]"
-send "\r"
+# Alpine 3.24 asks for an IPv6 address too. Older versions skip this prompt.
+expect {
+    "IPv6 address for eth0?" {
+        send "none\r"
+        exp_continue
+    }
+    "manual network configuration" {
+        send "\r"
+    }
+}
 
 expect ":~#"
 send "ifup eth0\r"
