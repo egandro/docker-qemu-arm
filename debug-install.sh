@@ -1,16 +1,18 @@
 #!/bin/bash
 
-if [ -n "$TERMUX_VERSION" ]; then
+if [ -n "${TERMUX_VERSION:-}" ] && [ "${ALLOW_TERMUX:-0}" != "1" ]; then
   echo "Error: This won't run on Termux"
   exit 1
 fi
 
-if [ ! -f "config.env" ]; then
+CONFIG_FILE="${CONFIG_FILE:-config.env}"
+if [ ! -f "$CONFIG_FILE" ]; then
     # get the default config file
-    cp config.sample config.env
+    cp config.sample "$CONFIG_FILE"
 fi
 
-source config.env
+# shellcheck disable=SC1090
+source "$CONFIG_FILE"
 
 expect -f installqemu.expect
 
