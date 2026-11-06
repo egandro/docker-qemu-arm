@@ -75,7 +75,7 @@ See [dev/README.md](dev/README.md) for details and the other commands.
 
 > [!IMPORTANT]
 > If you are using a previous version (lower than Alpine 3.24), ssh into the VM (`./ssh2qemu.sh`) and run `apk upgrade openssh`.
-> Alpine 3.21 and older are EOL but have a patch. Alpine 3.15 and older are not patched — please upgrade.
+> Alpine 3.21 and older are EOL but have a patch. Alpine 3.15 and older are not patched - please upgrade.
 >
 > Check whether your installation is affected ([sshhole.com](https://sshhole.com/), [check.sh](https://github.com/oz9un/sshole)):
 >
